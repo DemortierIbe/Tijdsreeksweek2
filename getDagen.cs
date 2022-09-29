@@ -19,26 +19,35 @@ namespace MCT.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "days")] HttpRequest req,
             ILogger log)
         {
-            string connectionString = Environment.GetEnvironmentVariable("ConnectionString");
-            List<string> dagen = new List<string>();
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                await connection.OpenAsync();
-                using (SqlCommand command = new SqlCommand())
+                string connectionString = Environment.GetEnvironmentVariable("ConnectionString");
+                List<string> dagen = new List<string>();
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    command.Connection = connection;
-                    command.CommandText = "select Distinct DagVanDeWeek From Bezoekers";
-
-                    SqlDataReader reader = await command.ExecuteReaderAsync();
-                    while (await reader.ReadAsync())
+                    await connection.OpenAsync();
+                    using (SqlCommand command = new SqlCommand())
                     {
-                        var dag = reader["DagVanDeWeek"].ToString();
-                        dagen.Add(dag);
+                        command.Connection = connection;
+                        command.CommandText = "select Distinct DagVanDeWeek From Bezoekers";
+
+                        SqlDataReader reader = await command.ExecuteReaderAsync();
+                        while (await reader.ReadAsync())
+                        {
+                            var dag = reader["DagVanDeWeek"].ToString();
+                            dagen.Add(dag);
+                        }
                     }
                 }
+
+                return new OkObjectResult(dagen);
+            }
+            catch (System.Exception ex)
+            {
+
+                throw ex;
             }
 
-            return new OkObjectResult(dagen);
         }
     }
 }
