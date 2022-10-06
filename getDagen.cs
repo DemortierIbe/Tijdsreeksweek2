@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using System.Data.SqlClient;
 using System.Collections.Generic;
 
+
 namespace MCT.Functions
 {
     public static class getDagen
@@ -19,35 +20,68 @@ namespace MCT.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "days")] HttpRequest req,
             ILogger log)
         {
+
+            string connectionString = Environment.GetEnvironmentVariable("ConnectionString");
+            List<string> dagen = new List<string>();
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                using (SqlCommand command = new SqlCommand())
+                {
+                    command.Connection = connection;
+                    command.CommandText = "select Distinct DagVanDeWeek From Bezoekers";
+
+                    SqlDataReader reader = await command.ExecuteReaderAsync();
+                    while (await reader.ReadAsync())
+                    {
+                        var dag = reader["DagVanDeWeek"].ToString();
+                        dagen.Add(dag);
+                    }
+                }
+            }
+
+            return new OkObjectResult(dagen);
+        }
+
+        [FunctionName("getVisitors")]
+        public static async Task<IActionResult> GetVisitors(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "visitors/{day}")] HttpRequest req, string day,
+            ILogger log)
+        {
+
             try
             {
-                string connectionString = Environment.GetEnvironmentVariable("ConnectionString");
-                List<string> dagen = new List<string>();
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                string connectiongString = Environment.GetEnvironmentVariable("ConnectionString");
+                List<Visit> visits = new List<Visit>();
+
+                using (SqlConnection connection = new SqlConnection(connectiongString))
                 {
                     await connection.OpenAsync();
+
                     using (SqlCommand command = new SqlCommand())
                     {
                         command.Connection = connection;
-                        command.CommandText = "select Distinct DagVanDeWeek From Bezoekers";
+                        command.CommandText = "SELECT Tijdstip, AantalBezoekers FROM Bezoekers Where DagVanDeWeek = @dag";
+                        command.Parameters.AddWithValue("@dag", day);
 
                         SqlDataReader reader = await command.ExecuteReaderAsync();
                         while (await reader.ReadAsync())
                         {
-                            var dag = reader["DagVanDeWeek"].ToString();
-                            dagen.Add(dag);
+                            var visit = new Visit();
+                            visit.Tijdstip = Convert.ToInt32(reader["TijdstipDag"]);
+                            visit.AantalBezoekers = Convert.ToInt32(reader["AantalBezoekers"]);
+                            visit.DagVanDeWeek = day;
+                            visits.Add(visit);
                         }
                     }
                 }
-
-                return new OkObjectResult(dagen);
+                return new OkObjectResult(visits);
             }
             catch (System.Exception ex)
             {
-
-                throw ex;
+                log.LogError(ex.Message);
+                return new StatusCodeResult(500);
             }
-
         }
     }
 }
