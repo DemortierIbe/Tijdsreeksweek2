@@ -61,14 +61,14 @@ namespace MCT.Functions
                     using (SqlCommand command = new SqlCommand())
                     {
                         command.Connection = connection;
-                        command.CommandText = "SELECT Tijdstip, AantalBezoekers FROM Bezoekers Where DagVanDeWeek = @dag";
+                        command.CommandText = "SELECT TijdstipDag, AantalBezoekers FROM Bezoekers Where DagVanDeWeek = @dag";
                         command.Parameters.AddWithValue("@dag", day);
 
                         SqlDataReader reader = await command.ExecuteReaderAsync();
                         while (await reader.ReadAsync())
                         {
                             var visit = new Visit();
-                            visit.Tijdstip = Convert.ToInt32(reader["TijdstipDag"]);
+                            visit.TijdstipDag = Convert.ToInt32(reader["TijdstipDag"]);
                             visit.AantalBezoekers = Convert.ToInt32(reader["AantalBezoekers"]);
                             visit.DagVanDeWeek = day;
                             visits.Add(visit);
