@@ -15,7 +15,7 @@ namespace MCT.Function
     {
         [FunctionName("AddRegistration")]
         public static async Task<IActionResult> AddRegistration(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/registrations")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/registrations")] HttpRequest req,
             ILogger log)
         {
             try
@@ -48,6 +48,7 @@ namespace MCT.Function
             }
             catch (System.Exception ex)
             {
+                log.LogError(ex.Message);
                 return new StatusCodeResult(500);
             }
 
@@ -55,7 +56,7 @@ namespace MCT.Function
 
         [FunctionName("GetRegistration")]
         public static async Task<IActionResult> GetRegistration(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "registrations")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "registrations")] HttpRequest req,
             ILogger log)
         {
             try
